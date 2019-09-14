@@ -10,7 +10,7 @@ class RBFN(object):
         self.basis = basis
         self.p = p_norm
         self.sigma = sigma
-
+    
     def _get_param_names(cls):
         """Get parameter names for the estimator"""
         # fetch the constructor or the original constructor before
@@ -36,7 +36,8 @@ class RBFN(object):
                                    % (cls, init_signature))
         # Extract and sort argument names excluding 'self'
         return sorted([p.name for p in parameters])
-
+    
+    # Return the parameters of RBFN
     def get_params(self, deep=True):
         """Get parameters for this estimator.
         Parameters
@@ -58,6 +59,7 @@ class RBFN(object):
             out[key] = value
         return out
 
+    # Set the parameters of RBFN with corresponding dictionary
     def set_params(self, **params):
         if not params:
             # Simple optimization to gain speed (inspect is slow)
@@ -84,13 +86,15 @@ class RBFN(object):
             valid_params[key].set_params(**sub_params)
 
         return self
-
+    
+    # Get the centers by clustering the data points
     def _get_centers(self, x):
         brc = Birch()
         brc.fit(x)
         brc.predict(x)
         return brc.subcluster_centers_
-
+    
+    # The basis function (other basis functions will be added soon)
     def _basis_function(self, xi, center):
         """
         :param x: a vector (1*m), denotes one data point
@@ -102,7 +106,8 @@ class RBFN(object):
             res = np.exp(-np.power(norm / self.sigma, 2) * .5)
 
         return res
-
+    
+    # Calculate the matrix according to basis function
     def _calculate_G(self, x):
         G = np.zeros((x.shape[0], self.centers.shape[0]))
         for i in range(x.shape[0]):
@@ -110,6 +115,7 @@ class RBFN(object):
                 G[i, j] = self._basis_function(x[i], self.centers[j])
         return G
 
+    # Fit a rbfn model (calculate the corresponding weight of centers)
     def fit(self, x, y):
         x = np.asarray(x)
         if len(x.shape) == 1:
@@ -121,7 +127,8 @@ class RBFN(object):
         G = self._calculate_G(x)
         print(G.shape, self.centers.shape)
         self.weight = np.dot(np.linalg.pinv(G), y)
-
+    
+    # Predict the output according to the trained model.
     def predict(self, x):
         x = np.asarray(x)
         G = self._calculate_G(x)
