@@ -146,7 +146,7 @@ rbf.fit(X, y)
 p = rbf.predict(X)
 print(p)
 plt.plot(X, y, '-o', label='true')
-plt.plot(X, p, '-o', label='RBF-Net')
+plt.plot(X, p, '-o', label='RBFN')
 plt.legend()
 
 plt.tight_layout()
