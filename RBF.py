@@ -6,10 +6,11 @@ import numpy as np
 
 
 class RBFN(object):
-    def __init__(self, basis='rbf', p_norm=2, sigma=0.5):
+    def __init__(self, basis='rbf', p_norm=2, sigma=0.5, n_hidden=None):
         self.basis = basis
         self.p = p_norm
         self.sigma = sigma
+        self.hidden = n_hidden
     
     def _get_param_names(cls):
         """Get parameter names for the estimator"""
@@ -89,10 +90,19 @@ class RBFN(object):
     
     # Get the centers by clustering the data points
     def _get_centers(self, x):
-        brc = Birch()
-        brc.fit(x)
-        brc.predict(x)
-        return brc.subcluster_centers_
+        x = np.array(x)
+        if self.hidden is None:
+            brc = Birch()
+            brc.fit(x)
+            brc.predict(x)
+            return brc.subcluster_centers_
+        else:
+            if x.shape[0] == 1:
+                x = x.T
+                print(x.shape)
+            idx = np.random.choice(x.shape[0], self.hidden, replace=False)
+            print(idx)
+            return x[idx]
     
     # The basis function (other basis functions will be added soon)
     def _basis_function(self, xi, center):
@@ -123,9 +133,9 @@ class RBFN(object):
         else:
             self.centers = self._get_centers(x)
         y = np.asarray(y)
+        print(self.centers.shape)
 
         G = self._calculate_G(x)
-        print(G.shape, self.centers.shape)
         self.weight = np.dot(np.linalg.pinv(G), y)
     
     # Predict the output according to the trained model.
@@ -141,10 +151,9 @@ X = np.sort(X, axis=0)
 noise = np.random.uniform(-0.1, 0.1, NUM_SAMPLES)
 y = np.cos(2 * np.pi * X) + noise
 
-rbf = RBFN().set_params(**{'p_norm': 1, 'sigma': 1})
+rbf = RBFN(n_hidden=20)
 rbf.fit(X, y)
 p = rbf.predict(X)
-print(p)
 plt.plot(X, y, '-o', label='true')
 plt.plot(X, p, '-o', label='RBFN')
 plt.legend()
